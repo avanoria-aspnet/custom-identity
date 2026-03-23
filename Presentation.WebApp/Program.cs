@@ -51,4 +51,16 @@ app.MapControllerRoute(
     .WithStaticAssets();
 
 
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<DataContext>();
+    var userService = scope.ServiceProvider.GetRequiredService<IUserService>();
+
+    await context.Database.MigrateAsync();
+
+    if (!await context.Users.AnyAsync())
+        await userService.CreateUserAsync("admin@domain.com", "BytMig123!");
+}
+
+
 app.Run();
