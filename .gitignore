@@ -361,3 +361,8 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+/Presentation.WebApp/Views/Shared/Partials/Sections/_AboutUsSection.cshtml
+/Presentation.WebApp/Views/Shared/Partials/Sections/_BrandsSection.cshtml
+/Presentation.WebApp/Views/Shared/Partials/Sections/_HeroSection.cshtml
+/Presentation.WebApp/Views/Shared/Partials/Sections/_OurProgramsSection.cshtml
+/Presentation.WebApp/Views/Shared/Partials/Sections/_OurStoreSection.cshtml
