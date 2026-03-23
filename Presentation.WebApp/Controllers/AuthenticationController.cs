@@ -1,65 +1,71 @@
 ﻿using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Presentation.WebApp.Data;
 using Presentation.WebApp.Models.Authentication;
-using Presentation.WebApp.Services;
-using System.Security.Claims;
 
 namespace Presentation.WebApp.Controllers;
 
-public class AuthenticationController(IUserService userService) : Controller
+
+public class AuthenticationController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager) : Controller
 {
 
     [HttpGet]
+    [AllowAnonymous]
     public IActionResult SignIn(string? returnUrl = null)
     {
         ViewBag.ReturnUrl = returnUrl;
         return View();
     }
 
+
+
     [HttpPost]
+    [AllowAnonymous]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> SignIn(SignInForm form, string? returnUrl = null)
     {
-        if (!ModelState.IsValid)
-            return View(form);
+        var invalidErrorMessage = "Incorrect email address or password";
+        var lockedErrorMessage = "Account has been temporary locked";
 
-        var user = await userService.ValidateCedentialsAsync(form.Email, form.Password);
-        if (user is null)
+        if (!ModelState.IsValid)
         {
-            ModelState.AddModelError(nameof(form.ErrorMessage), "Incorrect Email or Password");
+            ModelState.AddModelError(nameof(form.ErrorMessage), invalidErrorMessage);
             return View(form);
         }
 
-        var claims = new List<Claim>
+        var user = await userManager.FindByEmailAsync(form.Email);
+        if (user is null)
         {
-            new(ClaimTypes.NameIdentifier, user.Id),
-            new(ClaimTypes.Name, user.Email),
-            new(ClaimTypes.Email, user.Email)
-        };
+            ModelState.AddModelError(nameof(form.ErrorMessage), invalidErrorMessage);
+            return View(form);
+        }
 
-        var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+        var result = await signInManager.PasswordSignInAsync(user, form.Password, form.RememberMe, true);
 
-        var principal = new ClaimsPrincipal(identity);
-
-        var authProperties = new AuthenticationProperties
+        if (result.Succeeded)
         {
-            IsPersistent = form.RememberMe,
-            ExpiresUtc = DateTimeOffset.UtcNow.AddHours(1)
-        };
+            if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
+                return Redirect(returnUrl);
 
-        await HttpContext.SignInAsync(
-            CookieAuthenticationDefaults.AuthenticationScheme,
-            principal,
-            authProperties
-        );
+            return RedirectToAction("Index", "Account");
+        }
 
-        if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
-            return Redirect(returnUrl);
+        if (result.IsLockedOut)
+        {
+            ModelState.AddModelError(nameof(form.ErrorMessage), lockedErrorMessage);
+            return View(form);
+        }
 
-        return RedirectToAction("Index", "Account");
+        ModelState.AddModelError(nameof(form.ErrorMessage), invalidErrorMessage);
+        return View(form);
     }
 
+
+
     [HttpPost]
+    [Authorize]
     [ValidateAntiForgeryToken]
     public new async Task<IActionResult> SignOut()
     {

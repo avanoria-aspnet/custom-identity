@@ -1,10 +1,9 @@
-﻿namespace Presentation.WebApp.Data;
+﻿using Microsoft.AspNetCore.Identity;
 
-public class ApplicationUser
+namespace Presentation.WebApp.Data;
+
+public class ApplicationUser : IdentityUser
 {
-    public string Id { get; set; } = null!;
-    public string Email { get; set; } = null!;
-    public string PasswordHash { get; set; } = null!;
-    public string PasswordSalt { get; set; } = null!;
-    public DateTime CreatedAt { get; set; }
+    public string? FirstName { get; set; }
+    public string? LastName { get; set; }   
 }
