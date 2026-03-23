@@ -4,4 +4,9 @@
 
 <div class="my-account-page">
     <partial name="Partials/Common/_PageTitleSection" />
+    <form method="post" asp-action="SignOut" asp-controller="Authentication">
+        @Html.AntiForgeryToken()
+
+        <button type="submit" class="btn">Sign Out</button>
+    </form>
 </div>

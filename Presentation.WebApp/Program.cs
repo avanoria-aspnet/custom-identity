@@ -8,7 +8,7 @@ builder.Services
     .AddCookie(options =>
     {
         options.LoginPath = "/authentication/signin";
-        options.Cookie.Name = "CoreFitness.Auth";
+        options.Cookie.Name = $"corefitness_auth";
         options.ExpireTimeSpan = TimeSpan.FromHours(1);
         options.SlidingExpiration = true;
      
