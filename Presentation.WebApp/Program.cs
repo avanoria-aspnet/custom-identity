@@ -50,17 +50,56 @@ app.UseAuthorization();
 
 app.MapStaticAssets();
 
+app.MapAreaControllerRoute(
+    name: "admin",
+    areaName: "Admin",
+    pattern: "admin/{controller=Dashboard}/{action=Index}/{id?}")
+    .WithStaticAssets();
+
+app.MapAreaControllerRoute(
+    name: "member",
+    areaName: "Member",
+    pattern: "member/{controller=Account}/{action=Index}/{id?}")
+    .WithStaticAssets();
+
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}")
     .WithStaticAssets();
 
+
+
+
+
+
+
+// INITIALIZE - DATABASE (DatabaseInitializer/PersistenceInitializer)
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<DataContext>();
-    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-
     await context.Database.MigrateAsync();
+}
+
+
+// SEED - STANDARD ROLES
+using (var scope = app.Services.CreateScope())
+{
+    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+
+    var roles = new List<string> { "Admin", "Employee", "Member" };
+
+    foreach(var role in roles)
+    {
+        if (!await roleManager.RoleExistsAsync(role))
+            await roleManager.CreateAsync(new IdentityRole(role));
+    }
+}
+
+
+// SEED - STANDARD ADMIN-ACCOUNT
+using (var scope = app.Services.CreateScope())
+{
+    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
 
     var email = "admin@domain.com";
     var password = "BytMig123!";
@@ -76,9 +115,50 @@ using (var scope = app.Services.CreateScope())
         };
 
         var result = await userManager.CreateAsync(user, password);
+        if (result.Succeeded)
+        {
+            try
+            {
+                await userManager.AddToRoleAsync(user, "Admin");
+            }
+            catch { }
+        }
     }
 }
 
+// SEED - STANDARD EMPLOYEE-ACCOUNT
+using (var scope = app.Services.CreateScope())
+{
+    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+
+    var firstName = "Hans";
+    var lastName = "Mattin-Lassei";
+    var email = "hans@domain.com";
+    var password = "BytMig123!";
+
+    var user = await userManager.FindByEmailAsync(email);
+    if (user is null)
+    {
+        user = new ApplicationUser
+        {
+            UserName = email,
+            Email = email,
+            EmailConfirmed = true,
+            FirstName = firstName,
+            LastName = lastName
+        };
+
+        var result = await userManager.CreateAsync(user, password);
+        if (result.Succeeded)
+        {
+            try
+            {
+                await userManager.AddToRoleAsync(user, "Employee");
+            }
+            catch { }
+        }
+    }
+}
 
 
 app.Run();

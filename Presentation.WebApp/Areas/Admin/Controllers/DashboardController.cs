@@ -1,10 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Presentation.WebApp.Controllers;
+namespace Presentation.WebApp.Areas.Admin.Controllers;
 
-[Authorize]
-public class AccountController : Controller
+[Authorize(Roles = "Admin, Employee")]
+public class DashboardController : Controller
 {
     public IActionResult Index()
     {
