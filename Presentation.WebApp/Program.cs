@@ -1,4 +1,7 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.EntityFrameworkCore;
+using Presentation.WebApp.Data;
+using Presentation.WebApp.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,6 +21,12 @@ builder.Services
     });
 
 builder.Services.AddAuthorization();
+
+builder.Services.AddDbContext<DataContext>(x 
+    => x.UseSqlServer(builder.Configuration.GetConnectionString("SqlConnection")));
+
+builder.Services.AddScoped<IPasswordHasher, Pbkdf2PasswordHasher>();
+builder.Services.AddScoped<IUserService, UserService>();
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddRouting(x => x.LowercaseUrls = true);

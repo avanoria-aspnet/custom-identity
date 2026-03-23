@@ -2,13 +2,13 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
 using Presentation.WebApp.Models.Authentication;
+using Presentation.WebApp.Services;
 using System.Security.Claims;
 
 namespace Presentation.WebApp.Controllers;
 
-public class AuthenticationController : Controller
+public class AuthenticationController(IUserService userService) : Controller
 {
-    private const string SecretPassword = "BytMig123!";
 
     [HttpGet]
     public IActionResult SignIn(string? returnUrl = null)
@@ -23,18 +23,18 @@ public class AuthenticationController : Controller
         if (!ModelState.IsValid)
             return View(form);
 
-        if (form.Password != SecretPassword)
+        var user = await userService.ValidateCedentialsAsync(form.Email, form.Password);
+        if (user is null)
         {
-            ModelState.AddModelError(nameof(form.ErrorMessage), "Incorrect Password");
+            ModelState.AddModelError(nameof(form.ErrorMessage), "Incorrect Email or Password");
             return View(form);
         }
 
         var claims = new List<Claim>
         {
-            new(ClaimTypes.Name, "hanmat"),
-            new(ClaimTypes.Email, "hans@domain.com"),
-            new(ClaimTypes.NameIdentifier, "16508e8d-39fa-494b-8451-b2321fcba747"),
-            new(ClaimTypes.Role, "Admin")
+            new(ClaimTypes.NameIdentifier, user.Id),
+            new(ClaimTypes.Name, user.Email),
+            new(ClaimTypes.Email, user.Email)
         };
 
         var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
@@ -43,7 +43,7 @@ public class AuthenticationController : Controller
 
         var authProperties = new AuthenticationProperties
         {
-            IsPersistent = true,
+            IsPersistent = form.RememberMe,
             ExpiresUtc = DateTimeOffset.UtcNow.AddHours(1)
         };
 
