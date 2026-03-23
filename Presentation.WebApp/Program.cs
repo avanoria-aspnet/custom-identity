@@ -1,4 +1,23 @@
+using Microsoft.AspNetCore.Authentication.Cookies;
+
 var builder = WebApplication.CreateBuilder(args);
+
+
+builder.Services
+    .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.LoginPath = "/authentication/signin";
+        options.Cookie.Name = "CoreFitness.Auth";
+        options.ExpireTimeSpan = TimeSpan.FromHours(1);
+        options.SlidingExpiration = true;
+     
+        options.AccessDeniedPath = "/error/accessdenied";
+        options.LogoutPath = "/";
+
+    });
+
+builder.Services.AddAuthorization();
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddRouting(x => x.LowercaseUrls = true);

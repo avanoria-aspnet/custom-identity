@@ -1,0 +1,30 @@
+﻿@using Presentation.WebApp.Models.Authentication
+@model SignInForm
+
+@{
+    ViewData["Title"] = "Sign In";
+}
+
+<div class="sign-in-page">
+    <partial name="Partials/Common/_PageTitleSection" />
+
+    <form method="post" asp-action="SignIn" asp-controller="Authentication" novalidate>
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="returnUrl" value="@ViewBag?.ReturnUrl" />
+
+        <div class="form-group">
+            <label class="form-label" asp-for="Password"></label>
+            <input class="form-input" asp-for="Password" />
+            <span class="form-field-validation" asp-validation-for="Password"></span>
+        </div>
+
+        <div>
+            <span class="form-field-validation" asp-validation-for="ErrorMessage"></span>
+        </div>
+
+        <button type="submit" class="btn">Continue</button>
+
+        <div asp-validation-summary="ModelOnly"></div>
+    </form>
+
+</div>
